@@ -3,7 +3,7 @@
 #include "kernel/fcntl.h"
 
 
-#define MAXARGS 10
+#define MAXARGS 20
 #define MAXWORD 30
 char whitespace[] = " \t\r\n\v";
 char args[MAXARGS][MAXWORD];
@@ -130,7 +130,7 @@ runcmd(char *argv[],int argc){
       }else{
         fprintf(2,"%s\n","redirect error");
       }
-      
+
     }
   }
   exec(argv[0], argv);

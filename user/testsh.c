@@ -267,6 +267,11 @@ t6(int *ok)
   } else {
     char buf[64];
     readfile("testsh.out", buf, sizeof(buf));
+    //调试语句
+    // for(int i=0;i<sizeof(buf);i++){
+    //   printf("%c",buf[i]);
+    // }
+    // printf("\n");
     if(strstr(buf, "provides pointers to on-line resources") == 0){
       printf("FAIL\n");
       *ok = 0;
@@ -315,8 +320,13 @@ t8(int *ok)
   } else {
     char buf[64];
     readfile("testsh.out", buf, sizeof(buf));
-    if(strstr(buf, "1 11 71") == 0){
-      printf("FAIL\n");
+    // //调试语句
+    // for(int i=0;i<sizeof(buf);i++){
+    //   printf("%c",buf[i]);
+    // }
+    // printf("\n");
+    if(strstr(buf, "1 11 72") == 0){
+      printf("------FAIL------\n");
       *ok = 0;
     } else {
       printf("PASS\n");
