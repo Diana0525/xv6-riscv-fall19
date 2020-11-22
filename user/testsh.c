@@ -325,8 +325,8 @@ t8(int *ok)
     //   printf("%c",buf[i]);
     // }
     // printf("\n");
-    if(strstr(buf, "1 11 72") == 0){
-      printf("------FAIL------\n");
+    if(strstr(buf, "1 11 71") == 0){
+      printf("FAIL\n");
       *ok = 0;
     } else {
       printf("PASS\n");

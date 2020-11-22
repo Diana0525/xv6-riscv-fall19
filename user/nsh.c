@@ -27,7 +27,7 @@ fork1(void)
     panic("fork");
   return pid;
 }
-//getcmd函数负责打印"$"符号，让用户在该符号之后输入命令
+//getcmd函数负责打印"@"符号，让用户在该符号之后输入命令
 int
 getcmd(char *buf, int nbuf)
 {
