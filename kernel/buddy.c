@@ -129,7 +129,7 @@ bd_malloc(uint64 nbytes)
   // Find a free block >= nbytes, starting with smallest k possible
   fk = firstk(nbytes);
   for (k = fk; k < nsizes; k++) {
-    if(!lst_empty(&bd_sizes[k].free))
+    if(!lst_empty(&bd_sizes[k].free))//lst_empty：list空返回1
       break;
   }
   if(k >= nsizes) { // No free blocks?
@@ -139,13 +139,17 @@ bd_malloc(uint64 nbytes)
 
   // Found a block; pop it and potentially split it.
   char *p = lst_pop(&bd_sizes[k].free);
-  bit_set(bd_sizes[k].alloc, blk_index(k, p));
+  //若该位已经被置1，表示其兄弟已经被分配，则将该位清零
+  if(bit_isset(bd_sizes[k].alloc, blk_index(k, p)/2)){
+    bit_clear(bd_sizes[k].alloc, blk_index(k, p)/2);
+  }
+  // bit_set(bd_sizes[k].alloc, blk_index(k, p)/2);
   for(; k > fk; k--) {
     // split a block at size k and mark one half allocated at size k-1
     // and put the buddy on the free list at size k-1
     char *q = p + BLK_SIZE(k-1);   // p's buddy
     bit_set(bd_sizes[k].split, blk_index(k, p));
-    bit_set(bd_sizes[k-1].alloc, blk_index(k-1, p));
+    bit_set(bd_sizes[k-1].alloc, blk_index(k-1, p)/2);//此时兄弟块是空闲的，因此无需判断，直接置1
     lst_push(&bd_sizes[k-1].free, q);
   }
   release(&lock);
@@ -222,8 +226,8 @@ bd_mark(void *start, void *stop)
     panic("bd_mark");
 
   for (int k = 0; k < nsizes; k++) {
-    bi = blk_index(k, start);
-    bj = blk_index_next(k, stop);
+    bi = blk_index(k, start);//计算内存块索引for address start at size k
+    bj = blk_index_next(k, stop);// 计算第一个内存块at size k that doesn't contain stop
     for(; bi < bj; bi++) {
       if(k > 0) {
         // if a block is allocated at size k, mark it as split too.
@@ -299,7 +303,7 @@ bd_init(void *base, void *end) {
 
   initlock(&lock, "buddy");
   bd_base = (void *) p;
-
+  // size的数目是偏大的，则表示有一些内存块是不可用的
   // compute the number of sizes we need to manage [base, end)
   nsizes = log2(((char *)end-p)/LEAF_SIZE) + 1;
   if((char*)end-p > BLK_SIZE(MAXSIZE)) {
@@ -310,38 +314,45 @@ bd_init(void *base, void *end) {
          (char*) end - p, nsizes);
 
   // allocate bd_sizes array
-  bd_sizes = (Sz_info *) p;
-  p += sizeof(Sz_info) * nsizes;
-  memset(bd_sizes, 0, sizeof(Sz_info) * nsizes);
+  bd_sizes = (Sz_info *) p;//获取需要分配数据块的首地址
+  p += sizeof(Sz_info) * nsizes;//p指向数据块尾部
+  memset(bd_sizes, 0, sizeof(Sz_info) * nsizes);//所有的内存块清零
 
+  //为每层size分配alloc数组，用于存放内存块是否被占据的信息
+  //按要求，两块内存块使用1个bit，1个字节8个bit
   // initialize free list and allocate the alloc array for each size k
   for (int k = 0; k < nsizes; k++) {
     lst_init(&bd_sizes[k].free);
     sz = sizeof(char)* ROUNDUP(NBLK(k), 8)/8;
-    bd_sizes[k].alloc = p;
-    memset(bd_sizes[k].alloc, 0, sz);
-    p += sz;
+    bd_sizes[k].alloc = p;//该数组在后面
+    memset(bd_sizes[k].alloc, 0, sz/2);//分配给alloc的空间除以2
+    p += sz/2;
   }
 
+  //为每层size分配split数组，用于存放内存块是否分裂的信息
+  //一个内存块使用1个bit，一个字节8个bit
   // allocate the split array for each size k, except for k = 0, since
   // we will not split blocks of size k = 0, the smallest size.
   for (int k = 1; k < nsizes; k++) {
     sz = sizeof(char)* (ROUNDUP(NBLK(k), 8))/8;
-    bd_sizes[k].split = p;
+    bd_sizes[k].split = p;//该数组接在后面
     memset(bd_sizes[k].split, 0, sz);
     p += sz;
   }
   p = (char *) ROUNDUP((uint64) p, LEAF_SIZE);
 
+  //标记元数据区
   // done allocating; mark the memory range [base, p) as allocated, so
   // that buddy will not hand out that memory.
   int meta = bd_mark_data_structures(p);
   
+  //标记无效区
   // mark the unavailable memory range [end, HEAP_SIZE) as allocated,
   // so that buddy will not hand out that memory.
   int unavailable = bd_mark_unavailable(end, p);
   void *bd_end = bd_base+BLK_SIZE(MAXSIZE)-unavailable;
   
+  //初始化各层空闲链表
   // initialize free lists for each size k
   int free = bd_initfree(p, bd_end);
 
