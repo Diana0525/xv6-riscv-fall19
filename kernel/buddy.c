@@ -233,7 +233,7 @@ bd_mark(void *start, void *stop)
         // if a block is allocated at size k, mark it as split too.
         bit_set(bd_sizes[k].split, bi);
       }
-      bit_set(bd_sizes[k].alloc, bi);
+      bit_set(bd_sizes[k].alloc, bi/2);
     }
   }
 }
