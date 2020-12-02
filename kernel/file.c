@@ -38,8 +38,7 @@ filealloc(void)
   //     release(&ftable.lock);
   //     return f;
   //   }
-  // }
-
+  // } 
   if((f = (struct file*)bd_malloc(sizeof(struct file)))!=0){
     //内存清零
     memset(f,0,sizeof(struct file));
@@ -47,10 +46,8 @@ filealloc(void)
     release(&ftable.lock);
     return f;
   }
-  else{
-    release(&ftable.lock);
-    return 0;
-  }
+  release(&ftable.lock);
+  return 0;
   
 }
 
@@ -70,7 +67,7 @@ filedup(struct file *f)
 void
 fileclose(struct file *f)
 {
-  // struct file ff;
+  struct file ff;
 
   acquire(&ftable.lock);
   if(f->ref < 1)
@@ -79,25 +76,19 @@ fileclose(struct file *f)
     release(&ftable.lock);
     return;
   }
-  // ff = *f;//ff这个结构体，等于f此时指向的这个结构体，因此保存的是传入是的状态
+  ff = *f;
   f->ref = 0;
-  if(f->type == FD_PIPE){
-    pipeclose(f->pipe, f->writable);//关闭打开的pipe
-  } else if(f->type == FD_INODE || f->type == FD_DEVICE){
-    begin_op(f->ip->dev);
-    iput(f->ip);
-    end_op(f->ip->dev);
-  }
   f->type = FD_NONE;
   release(&ftable.lock);
 
-  // if(ff.type == FD_PIPE){
-  //   pipeclose(ff.pipe, ff.writable);//关闭打开的pipe
-  // } else if(ff.type == FD_INODE || ff.type == FD_DEVICE){
-  //   begin_op(ff.ip->dev);
-  //   iput(ff.ip);
-  //   end_op(ff.ip->dev);
-  // }
+  if(ff.type == FD_PIPE){
+    pipeclose(ff.pipe, ff.writable);//关闭打开的pipe
+  } else if(ff.type == FD_INODE || ff.type == FD_DEVICE){
+    begin_op(ff.ip->dev);
+    iput(ff.ip);
+    end_op(ff.ip->dev);
+  }
+  bd_free(f);
 }
 
 // Get metadata about file f.
