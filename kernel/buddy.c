@@ -257,10 +257,8 @@ bd_initfree_pair(int k, int bi, void *left, void *right) {
     // one of the pair is free,只需要该位为1即可
     free = BLK_SIZE(k);
     if(addr_in_range(addr(k,bi),left,right,free)){
-      // printf("left-buddy\n");
       lst_push(&bd_sizes[k].free, addr(k, bi));      // put buddy on free list
     } else{
-      // printf("left-bi\n");
       lst_push(&bd_sizes[k].free, addr(k, buddy));      // put bi on free list
     }
     // if(bit_isset(bd_sizes[k].alloc, bi/2))
