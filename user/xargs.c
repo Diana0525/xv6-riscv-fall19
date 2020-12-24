@@ -11,12 +11,12 @@
 int main(int argc, char *argv[])
 {
     int i, j, k, l, m;
-    char block[32];
-    char buf[32];
+    char block[32]; // 存储用户每行输入的命令
+    char buf[32];// 缓冲空格之间的字符
     char *p = buf;
     char *lineSplit[32]; //lineSplit是一个数组，数组长度为32位，每个位置存放的是一个字符型指针，指向一个字符串的首地址
     j = 0;
-    for (i = 1; i < argc; i++)
+    for (i = 1; i < argc; i++) // 读取指令中第二个字符串开始的字符串，例如xargs echo bye,中的后两个
     {
         lineSplit[j++] = argv[i]; //j++,先使用j值再+1
     }

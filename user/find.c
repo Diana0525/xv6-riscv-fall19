@@ -60,11 +60,11 @@ void find(char * path, char * findName) {
             p = buf + strlen(buf);
             *p++ = '/';
             while (read(fd, & de, sizeof(de)) == sizeof(de)) {
-                if (de.inum == 0 || de.inum == 1 || strcmp(de.name, ".") == 0 || strcmp(de.name, "..") == 0) 
+                if (de.inum == 0 || de.inum == 1 || strcmp(de.name, ".") == 0 || strcmp(de.name, "..") == 0) // 避开文件名为.和..的文件
                     continue;
                 memmove(p, de.name, strlen(de.name));
                 p[strlen(de.name)] = 0;
-                find(buf, findName);
+                find(buf, findName); // 递归调用，顺着目录一级一级找下去
             }
             break;
     }
