@@ -130,7 +130,6 @@ runcmd(char *argv[],int argc){
       }else{
         fprintf(2,"%s\n","redirect error");
       }
-
     }
   }
   exec(argv[0], argv);
