@@ -48,6 +48,7 @@ freerange(void *pa_start, void *pa_end)
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE){
     // kfree(p);
+    // 按分组分别初始化空闲链表
     r = (struct run*)p;
     j = i%NCPU;
     acquire(&kmems[j].lock);
@@ -74,7 +75,7 @@ kfree(void *pa)
   memset(pa, 1, PGSIZE);
 
   r = (struct run*)pa;
-  push_off();//关中断
+  push_off();//关中断，在调用cpuid()并使用其返回值的过程中需要关闭中断
   cid = cpuid();
   pop_off();//开中断
   acquire(&kmems[cid].lock);
@@ -96,7 +97,7 @@ kalloc(void)
 {
   struct run *r;
   int cid,i;
-  push_off();
+  push_off();//关中断，在调用cpuid()并使用其返回值的过程中需要关闭中断
   cid = cpuid();
   pop_off();//开中断
   acquire(&kmems[cid].lock);
@@ -107,7 +108,7 @@ kalloc(void)
   }
   else{//否则要从别的cpu的freelist窃取内存块
     release(&kmems[cid].lock);
-    for(i = 0;i < NCPU;i++){
+    for(i = 0; i < NCPU; i++){
       if(i != cid){
         acquire(&kmems[i].lock);
         r = kmems[i].freelist;//给当前准备窃取的内存块

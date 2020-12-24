@@ -91,7 +91,8 @@ bget(uint dev, uint blockno)//dev是设备号，blockno是缓存数据块号
   struct buf *b;
 
   int i;
-  //哈希函数用取余的方式构造
+  // 哈希函数用取余的方式构造
+  // 判断该块是否已经在cache里
   i = blockno % NBUCKETS;
   acquire(&bcache.lock[i]);
   for(b = bcache.hashbucket[i].next; b != &bcache.hashbucket[i]; b = b->next){
@@ -106,7 +107,6 @@ bget(uint dev, uint blockno)//dev是设备号，blockno是缓存数据块号
   // acquire(&bcache.lock);
 
   // // Is the block already cached?
-  // // 判断该块是否已经在cache里
   // for(b = bcache.head.next; b != &bcache.head; b = b->next){
   //   if(b->dev == dev && b->blockno == blockno){
   //     b->refcnt++;
